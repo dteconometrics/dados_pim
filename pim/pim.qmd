@@ -1,0 +1,797 @@
+---
+title: "Pesquisa Industrial Mensal"
+author: 'Núcleo de Dados <br><span style = "font-size: 70%;">ADEPE<br><a href="https://github.com/dteconometrics">`r fontawesome::fa("github", fill = "#282f6b")`</a>&nbsp; <a href="https://www.linkedin.com/in/vinicius-limeira-565117180/">`r fontawesome::fa("linkedin", fill = "#282f6b")`</a>&nbsp; <a href="mailto:vinicius.valenca@adepe.pe.gov.br">`r fontawesome::fa("envelope", fill = "#282f6b")`</a>&nbsp; <a href="https://www.adepe.pe.gov.br/">`r fontawesome::fa("home", fill = "#282f6b")`</a></span>'
+format: 
+  revealjs:
+    logo: "img/adepe_colorida.png"
+    width: 1200
+    slide-number: true
+    theme: [solarized, personalizacoes.scss]
+    title-slide-attributes:
+      #data-background-image: img/penguin-highway.jpg
+      data-background-size: cover  
+editor: visual
+---
+
+```{r setup, include=FALSE}
+options(htmltools.dir.version = FALSE)
+options(htmltools.preserve.raw = FALSE)
+knitr::opts_chunk$set(
+  echo = FALSE,
+  warning   = FALSE,  # exibir avisos do console?
+  message   = FALSE,  # exibir mensagens do console?
+  dpi       = 300,    # resolução
+  fig.align = "center"# alinhamento de imagens
+  )
+
+# Novo Atalho Pipe (Ctrl + Shift + N)
+```
+
+```{r utils}
+## Pacotes 
+
+## Pacotes utilizados nessa apresentação
+library(tidyverse)
+library(lubridate)
+library(tstools)
+library(sidrar)
+library(zoo)
+library(scales)
+library(gridExtra)
+library(tsibble)
+library(timetk)
+library(knitr)
+library(kableExtra)
+library(ggthemes)
+library(plotly)
+library(magrittr)
+
+
+# Acumular  valores percentuais em 'n' janelas móveis
+acum_i <- function(data, n){
+  
+  data_ma_n <- RcppRoll::roll_meanr(data, n)
+  
+  data_lag_n <- dplyr::lag(data_ma_n, n)
+  
+  data_acum_n = (((data_ma_n/data_lag_n)-1)*100)
+  
+  return(data_acum_n)
+  
+}
+
+
+names <- c('date', 'receita', 'volume', 'receita_sa', 'volume_sa')
+
+foot_ibge <- "Fonte: ADEPE com dados do IBGE"
+
+
+
+```
+
+```{r Nacional}
+## Pacotes 
+
+
+## Coleta e Tratamento ---------------------
+
+
+## Com Ajuste Sazonal 
+
+pim_sa = '/t/8888/n1/all/v/12607/p/last%20182/c544/all/d/v12607%205' %>% 
+  sidrar::get_sidra(api=.) %>% 
+  mutate(date = parse_date(`Mês (Código)`, format = '%Y%m')) %>% 
+  dplyr::select(date, "Seções e atividades industriais (CNAE 2.0)", Valor) %>% 
+  spread("Seções e atividades industriais (CNAE 2.0)", Valor) %>% 
+  as_tibble()
+  
+
+## Sem Ajuste Sazonal 
+
+
+pim = get_sidra(api='/t/8888/n1/all/v/12606/p/last%20182/c544/all/d/v12606%205') %>%
+  mutate(date = parse_date(`Mês (Código)`, format='%Y%m')) %>%
+  select(date, "Seções e atividades industriais (CNAE 2.0)", Valor) %>%
+  spread("Seções e atividades industriais (CNAE 2.0)", Valor) %>%
+  as_tibble() 
+
+
+
+## Transformação em ST 
+
+
+pim_sa_ts = ts(pim_sa[,-1], start = c(year(pim_sa$date[1]),
+                                      month(pim_sa$date[1])), frequency = 12)
+
+## Variação na Margem -------------
+margem = (pim_sa_ts/stats::lag(pim_sa_ts,-1)-1)*100
+colnames(margem) <- colnames(pim_sa[,-1])
+margem = tk_tbl(margem, preserve_index = TRUE,
+                rename_index = 'date')
+
+## Formato Long 
+
+
+margem_long = margem %>% 
+  gather(variavel, valor, -date)
+
+
+
+## Variaão Interanual ------------------------
+
+pim_ts = ts(pim[,-1], start = c(year(pim$date[1]),
+                                month(pim$date[1])), frequency = 12)
+
+interanual = (pim_ts/stats::lag(pim_ts,-12)-1)*100
+colnames(interanual) <- colnames(pim[,-1])
+
+interanual = tk_tbl(interanual, preserve_index = TRUE,
+                    rename_index = 'date')
+
+interanual_long = interanual %>% 
+  gather(variavel, valor, -date)
+
+
+## Variação acumulada em 12 meses ------ 
+anual = acum_i(pim_ts,12) %>%
+  as_tibble() %>%
+  mutate(date = pim$date) %>%
+  drop_na() %>%
+  select(date, everything()) 
+
+anual_long = anual %>%
+  gather(variavel, valor, -date)
+
+
+
+```
+
+```{r Estaduais}
+
+## Coleta e Tratamento dos Dados ------------------
+
+names <- c("date", "pim_sa_pe")
+
+## Produção Industrial índice e SA
+
+pim_pe_sa = '/t/8888/n3/26/v/12607/p/all/c544/129314/d/v12607%205' %>% 
+  sidrar::get_sidra(api=.) %>% 
+  mutate(date = parse_date(`Mês (Código)`, format = "%Y%m")) %>% 
+  select(date, "Seções e atividades industriais (CNAE 2.0) (Código)", Valor) %>% 
+  spread("Seções e atividades industriais (CNAE 2.0) (Código)", Valor) %>% 
+  `colnames<-`(names) %>% 
+  as_tibble() %>% 
+  drop_na()
+
+pim_pe = '/t/8888/n3/26/v/12606/p/all/c544/129314/d/v12606%205' %>% 
+  sidrar::get_sidra(api=.) %>% 
+  mutate(date = parse_date(`Mês (Código)`, format = "%Y%m")) %>% 
+  select(date,"Seções e atividades industriais (CNAE 2.0) (Código)", Valor) %>% 
+  spread("Seções e atividades industriais (CNAE 2.0) (Código)", Valor) %>% 
+  `colnames<-`(c('date', 'pim_pe'))
+
+
+## Produção Ceara Sa e indice 
+
+
+pim_ce_sa = '/t/8888/n3/23/v/12607/p/all/c544/129314/d/v12607%205' %>% 
+  sidrar::get_sidra(api=.) %>% 
+  mutate(date = parse_date(`Mês (Código)`, format = '%Y%m')) %>% 
+  select(date,"Seções e atividades industriais (CNAE 2.0) (Código)", Valor) %>% 
+  spread("Seções e atividades industriais (CNAE 2.0) (Código)", Valor) %>% 
+  `colnames<-`(c('date',"pim_ce_sa")) %>% 
+  as_tibble() %>% 
+  drop_na()
+
+
+pim_ce = '/t/8888/n3/23/v/12606/p/all/c544/129314/d/v12606%205' %>% 
+  sidrar::get_sidra(api=.) %>% 
+  mutate(date = parse_date(`Mês (Código)`, format = '%Y%m')) %>% 
+  select(date,"Seções e atividades industriais (CNAE 2.0) (Código)", Valor) %>% 
+  spread("Seções e atividades industriais (CNAE 2.0) (Código)", Valor) %>% 
+  `colnames<-`(c('date', 'pim_ce')) %>% 
+  as_tibble() %>% 
+  drop_na()
+
+## Produção Bahia SA e Indice 
+
+
+pim_ba_sa = '/t/8888/n3/29/v/12607/p/all/c544/129314/d/v12607%205' %>% 
+  sidrar::get_sidra(api=.) %>% 
+  mutate(date = parse_date(`Mês (Código)`, format = '%Y%m')) %>% 
+  select(date,"Seções e atividades industriais (CNAE 2.0) (Código)", Valor) %>% 
+  spread("Seções e atividades industriais (CNAE 2.0) (Código)", Valor) %>%
+  `colnames<-`(c('date', 'pim_ba_sa')) %>% 
+  as_tibble() %>% 
+  drop_na()
+  
+
+pim_ba = '/t/8888/n3/29/v/12606/p/all/c544/129314/d/v12606%205'  %>% 
+  sidrar::get_sidra(api=.) %>% 
+  mutate(date = parse_date(`Mês (Código)`, format = '%Y%m')) %>% 
+  select(date,"Seções e atividades industriais (CNAE 2.0) (Código)", Valor) %>% 
+  spread("Seções e atividades industriais (CNAE 2.0) (Código)", Valor) %>% 
+  `colnames<-`(c('date', 'pim_ba')) %>% 
+  as_tibble() %>% 
+  drop_na()
+
+
+## Nível Nordeeste 
+
+names_2 <- c('date', 'pim_ne')
+
+pim_ne_sa = '/t/8888/n2/all/v/12607/p/all/c544/129314/d/v12607%205' %>% 
+  get_sidra(api =.) %>% 
+  mutate(date = parse_date(`Mês (Código)`, format = '%Y%m')) %>% 
+  select(date, "Seções e atividades industriais (CNAE 2.0) (Código)", Valor) %>% 
+  spread("Seções e atividades industriais (CNAE 2.0) (Código)", Valor) %>% 
+  `colnames<-`(c('date', 'pim_ne_sa')) %>% 
+  as_tibble()
+
+
+
+
+pim_ne = '/t/8888/n2/all/v/12606/p/all/c544/56689,129314,129315,129316,129317,129318,129324,129326,129331,129332,129333,129334,129336,129338,129339/d/v12606%205' %>% 
+  get_sidra(api = .) %>% 
+  mutate(date = parse_date(`Mês (Código)`, format = '%Y%m')) %>% 
+  select(date, "Seções e atividades industriais (CNAE 2.0) (Código)", Valor) %>% 
+  spread("Seções e atividades industriais (CNAE 2.0) (Código)", Valor) %>% 
+  `colnames<-`(names_2) %>% 
+  select(date, pim_ne) %>% 
+  as_tibble()
+
+
+## Juntando os dados 
+
+
+dados_sa = pim_pe_sa %>% 
+  inner_join(pim_ce_sa, by = 'date') %>% 
+  inner_join(pim_ba_sa, by= 'date') %>% 
+  inner_join(pim_ne_sa, by = 'date')
+
+
+dados = pim_pe %>% 
+  inner_join(pim_ce, by = 'date') %>% 
+  inner_join(pim_ba, by = 'date') %>% 
+  inner_join(pim_ne, by = 'date')
+
+## Transformando em St -------------- 
+
+
+## Variação na Margem de nordeste 
+
+
+dados_sa_ts = ts(dados_sa[,-1], start = c(year(dados_sa$date[1]),
+                                          month(dados_sa$date[1])), frequency = 12)
+
+
+## Varição na Margem -----------
+
+margem_data = (dados_sa_ts/stats::lag(dados_sa_ts,-1)-1)*100
+
+colnames(margem_data) <- colnames(dados_sa[,-1])
+
+margem_data = tk_tbl(margem_data, preserve_index = TRUE,
+                     rename_index = 'date')
+
+## Formato Long 
+
+margem_data_long = margem_data %>% 
+  gather(variavel, valor, -date)
+
+
+## Variação Interanual -----------------------
+
+
+dados_ts = ts(dados[,-1], start = c(year(dados$date[1]),
+                                    month(dados$date[1])), frequency = 12)
+
+interanual_data = (dados_ts/stats::lag(dados_ts, -12)-1)*100
+colnames(interanual_data) <- colnames(dados[,-1])
+
+interanual_data = tk_tbl(interanual_data, preserve_index = TRUE,
+                         rename_index = 'date')
+
+interanual_data_long = interanual_data %>% 
+  gather(variavel, valor, -date)
+
+
+## Variação Acumulada em 12 Meses ------------
+
+anual_data = acum_i(dados_ts,12) %>% 
+  as_tibble() %>% 
+  mutate(date = dados$date) %>% 
+  drop_na() %>% 
+  select(date, everything())
+
+
+anual_data_long = anual_data %>% 
+  gather(variavel, valor, -date)
+
+
+## Por Setores Pernambucanos 
+
+## Margem 
+
+setor_margem = '/t/8888/n3/26/v/11602/p/all/c544/129314,129316,129317,129318,129324,129326,129331,129333,129334,129336,129338,129339/d/v11602%201' %>% 
+  get_sidra(api=.) %>% 
+  dplyr::mutate(date = parse_date(`Mês (Código)`, format = '%Y%m')) %>% 
+  dplyr::select(date, "atividades" = "Seções e atividades industriais (CNAE 2.0)", Valor) %>% 
+  drop_na() %>%
+  as_tibble()
+
+
+
+
+##Interanual 
+
+
+setor_interanual =  '/t/8888/n3/26/v/11603/p/all/c544/129314,129316,129317,129318,129324,129326,129331,129333,129334,129336,129338,129339/d/v11603%201' %>% 
+  get_sidra(api =.) %>% 
+  dplyr::mutate(date = parse_date(`Mês (Código)`, format = '%Y%m')) %>%
+  dplyr::select(date, "atividades" = "Seções e atividades industriais (CNAE 2.0)", Valor) %>% 
+  drop_na() %>%
+  as_tibble()
+  
+  
+
+
+## Anual 
+
+setor_anual = '/t/8888/n3/26/v/11604/p/all/c544/129314,129316,129317,129318,129324,129326,129331,129333,129334,129336,129338,129339/d/v11604%201' %>% 
+  get_sidra(api=.)%>% 
+  dplyr::mutate(date = parse_date(`Mês (Código)`, format = '%Y%m')) %>% 
+  dplyr::select(date, "atividades" = "Seções e atividades industriais (CNAE 2.0)", Valor) %>% 
+  drop_na() %>%
+  as_tibble()
+
+
+
+
+```
+
+### Sumário {.smaller}
+
+-   Sobre os Resultados<br><br>
+    -   Resultado Nacional<br><br>
+    -   Resultado Estadual <br><br>
+    
+## **Sumário Empresarial** {background-color=""}
+
+- Em janeiro de 2024, os resultados na região nordeste mostraram variações significativas. Pernambuco registrou uma leve queda, porém ainda apresentou um dado positivo de 0,47%, enquanto a Bahia teve o melhor desempenho do período. Em comparação com o mesmo período do ano anterior. 
+
+- Bahia teve o melhor resultado, mas Pernambuco foi o único estado a registrar um crescimento positivo na análise da variação acumulada, com 2,26%
+
+## **Resultado Nacional** {.smaller}
+
+::: columns
+::: {.column width="50%"}
+<br>
+
+- O resultado ficou próximo das expectativas, que previam uma queda de -1,7%, após uma alta surpreendente no último mês de 2023. Apesar da queda, houve um aumento de 3,6% em comparação com janeiro do ano anterior.
+
+- O acumulado em 12 meses alcançou 0,4%, enquanto a média móvel trimestral está em 0,2%.
+:::
+
+::: {.column width="50%"}
+::: panel-tabset
+### Variação na Margem
+
+```{r}
+
+# Tabela resumo dados na margem 
+margem %>%
+  select(date, `1 Indústria geral`, `2 Indústrias extrativas`,
+         `3 Indústrias de transformação`) %>%
+  tail() %>%
+  kable(align = 'c', 
+      digits=2, 
+      col.names = c('Mês', 'Indústria Geral', 'Indústria Extrativa',
+                    'Indústria de Transformação'),
+      caption='Produção Industrial: variação na margem') 
+
+```
+
+### Variação Interanual
+
+```{r}
+
+# Tabela resumo dados na comparação interanual
+interanual %>%
+  select(date, `1 Indústria geral`, `2 Indústrias extrativas`,
+         `3 Indústrias de transformação`) %>%
+  tail() %>%
+  kable(align = 'c', 
+      digits=2, 
+      col.names = c('Mês', 'Indústria Geral', 'Indústria Extrativa',
+                    'Indústria de Transformação'),
+      caption='Produção Industrial: variação interanual') 
+
+```
+
+### Variação Anual
+
+```{r, echo=F, eval=T, results='asis', fig.width=10, fig.height=8, fig.align='center', out.width="1\\linewidth", warning=FALSE, message=FALSE, size='tiny'}
+
+anual %>% 
+  select(date,`1 Indústria geral`, `2 Indústrias extrativas`,
+         `3 Indústrias de transformação`) %>% 
+  tail() %>% 
+  kable(align = 'c',
+        digits = 2,
+        col.names = c('Mês', 'Indústria Geral', 'Indústria Extrativa', 
+                      'Indústria de Transformação'),
+        caption = 'Produção Industrial: Variação Acumulada')
+
+
+
+```
+:::
+:::
+:::
+
+## Visualização {.smaller}
+
+Segue abaixo a visualização dos resultados, destacando uma recuperação leve:
+
+::: columns
+::: {.column width="50%"}
+**Variação na Margem**
+
+```{r}
+
+
+colours <- c("#428953", "#CE2929", "#A3DD57", "#77E599")
+
+filter(margem_long, date > 'jan 2014' &
+         variavel %in% c('1 Indústria geral')) %>%  
+  ggplot(aes(x=date, y=valor, colour=variavel)) +
+  geom_bar(aes(fill=variavel), stat='identity') +
+  scale_fill_manual(values=colours) +
+  scale_colour_manual(values=colours) +
+  geom_hline(yintercept=0, colour='black', linetype='dashed') +
+  facet_wrap(~variavel, scales='free') +
+  theme_classic() +
+  theme(legend.position='none',
+        strip.text=element_text(size=7, face='bold'),
+        axis.text.x=element_text(size=6),
+        plot.title=element_text(size=10, face='bold'),
+        plot.subtitle=element_text(size=8, face='italic')) +
+  scale_x_yearmon(breaks=pretty_breaks(n=4), format="%b %Y") +
+  labs(x='', y='',
+       title='Produção Industrial',
+       subtitle='Variação contra o mês imediatamente anterior (%)',
+       caption=foot_ibge)
+```
+
+:::
+
+::: {.column width="50%"}
+::: panel-tabset
+## variação Interanual
+
+```{r}
+
+## Visualização dos dados
+filter(interanual_long, as.Date(date) > '2014-01-01' &
+         variavel == '1 Indústria geral') %>%  
+  ggplot(aes(x=as.Date(date), y=valor, colour=variavel)) +
+  geom_line(size=.8) +
+  scale_colour_manual(values=colours) +
+  geom_hline(yintercept=0, colour='black', linetype='dashed') +
+  facet_wrap(~variavel, scales='free') +
+  theme_classic() +
+  theme(legend.position='none',
+        strip.text=element_text(size=7, face='bold'),
+        axis.text.x=element_text(size=6),
+        plot.title=element_text(size=10, face='bold'),
+        plot.subtitle=element_text(size=8, face='italic')) +
+  scale_x_date(breaks=pretty_breaks(n=8), labels=date_format("%b %Y")) +
+  labs(x='', y='',
+       title='Produção Industrial',
+       subtitle='Variação Interanual (%)',
+       caption=foot_ibge)
+
+
+```
+
+## variação Anual
+
+```{r}
+
+filter(anual_long, date > '2014-01-01' &
+         variavel %in% c('1 Indústria geral')) %>%  
+  ggplot(aes(x=date, y=valor, colour=variavel)) +
+  geom_line(size=.8) +
+  scale_colour_manual(values=colours) +
+  geom_hline(yintercept=0, colour='black', linetype='dashed') +
+  facet_wrap(~variavel, scales='free') +
+  theme_classic() +
+  theme(legend.position='none',
+        strip.text=element_text(size=7, face='bold'),
+        axis.text.x=element_text(size=6),
+        plot.title=element_text(size=10, face='bold'),
+        plot.subtitle=element_text(size=8, face='italic')) +
+  scale_x_date(breaks=pretty_breaks(n=8), labels=date_format("%b %Y")) +
+  labs(x='', y='',
+       title='Produção Industrial',
+       subtitle='Variação acumulada em 12 meses (%)',
+       caption=foot_ibge)
+
+
+```
+:::
+:::
+:::
+
+## **Resultado Pernambuco e Nordeste** {.smaller}
+
+::: columns
+::: {.column width="50%"}
+<br>
+
+-  Os resultados na região nordeste variaram significativamente em relação ao mês anterior. Pernambuco registrou uma queda, porém ainda apresentou um dado positivo de 0,47%, enquanto a Bahia teve o melhor resultado do mês de janeiro. No entanto, o Ceará apresentou um resultado negativo.
+
+- Em comparação com o mesmo mês do ano anterior, a Bahia se destacou com o melhor resultado. Entretanto, na variação acumulada, Pernambuco foi o único estado que obteve um resultado positivo em relação aos demais do nordeste, registrando um crescimento de 2,26%.
+:::
+
+::: {.column width="50%"}
+::: panel-tabset
+### Variação na Margem
+
+```{r}
+
+margem_data %>%
+  tail() %>%
+  kable(align = 'c', 
+      digits=2, 
+      col.names = c('Mês', 'Pernambuco', 'Ceará','Bahia', 
+                    'Nordeste'),
+      caption='Produção Industrial: variação na Margem')
+
+
+
+```
+
+### Variação Interanual
+
+```{r}
+
+interanual_data %>%
+  tail() %>%
+  kable(align = 'c', 
+      digits=2, 
+      col.names = c('Mês', 'Pernambuco', 'Ceará','Bahia', 
+                    'Nordeste'),
+      caption='Produção Industrial: variação interanual')
+
+
+```
+
+### Variação Anual
+
+```{r, echo=F, eval=T, results='asis', fig.width=10, fig.height=8, fig.align='center', out.width="1\\linewidth", warning=FALSE, message=FALSE, size='tiny'}
+
+anual_data %>%
+  tail() %>%
+  kable(align = 'c', 
+      digits=2, 
+      col.names = c('Mês', 'Pernambuco', 'Ceará','Bahia', 
+                    'Nordeste'),
+      caption='Produção Industrial: variação Anual')
+
+
+```
+:::
+:::
+:::
+
+## Visualização {.smaller}
+
+resultado de Pernambuco, nordeste e os demais estados: 
+
+::: columns
+::: {.column width="50%"}
+**Variação Interanual**
+
+```{r}
+
+
+
+colours_4 <- c("darkblue", "darkgray", "darkred", "yellow")
+
+
+
+last_obs_comp <- interanual_data_long %>% 
+  filter(variavel %in% c('pim_pe', 'pim_ce', 'pim_ba', 'pim_ne')) %>% 
+  group_by(variavel) %>% 
+  filter(date == max(date)) %>% 
+  ungroup()
+
+
+interanual_data_long %>% 
+  mutate(date = as.Date(date)) %>% 
+  filter(variavel%in% c('pim_pe', 'pim_ce', 'pim_ba', 'pim_ne')) %>% 
+  ggplot()+
+  geom_line(aes(x=date, y=valor, colour = variavel), size = 0.8)+
+  scale_colour_manual(values = colours_4)+
+    scale_x_date(breaks = pretty_breaks(n = 8), limits = c(as.Date("2019-01-01"), as.Date("2023-12-31")))+
+  theme_minimal()+
+  theme(legend.position = 'top',
+        strip.text = element_text(size = 10, face = 'bold')) +
+  labs(x = '', y = 'valor',
+       title = 'Variação Interanual',
+       caption = foot_ibge)
+
+
+
+```
+
+Aqui vem o Texto
+:::
+
+::: {.column width="50%"}
+::: panel-tabset
+## variação Anual
+
+```{r}
+
+colours_4 <- c("darkblue", "darkgray", "darkred", "yellow")
+
+anual_data_long %>% 
+  mutate(date = as.Date(date)) %>% 
+  filter(variavel%in% c('pim_pe', 'pim_ce', 'pim_ba', 'pim_ne')) %>% 
+  ggplot()+
+  geom_line(aes(x=date, y=valor, colour = variavel), size = 0.8)+
+  scale_colour_manual(values = colours_4)+
+    scale_x_date(breaks = pretty_breaks(n = 8), limits = c(as.Date("2019-01-01"), as.Date("2023-12-31")))+
+  theme_minimal()+
+  theme(legend.position = 'top',
+        strip.text = element_text(size = 10, face = 'bold')) +
+  labs(x = '', y = 'valor',
+       title = 'Variação Anual',
+       caption = foot_ibge)
+
+```
+:::
+:::
+:::
+
+## **Resultado Por Setor Pernambucano** {.smaller}
+
+::: columns
+::: {.column width="50%"}
+<br>
+
+- Com relação a variaçãoo anual os setoresd que mais se destacam são os de Fabricação de máquinas, aparelhos e materiais elétricos,  Fabricação de outros equipamentos de transporte, exceto veículos automotores e Fabricação de coque, de produtos derivados do petróleo e de biocombustíveis 
+
+- todos os setores podem ser visto ao lado. 
+
+
+:::
+
+::: {.column width="50%"}
+::: panel-tabset
+### Variação anual por setor tabela 1
+
+```{r, fig.width=8, fig.height=4}
+
+# Tabela 1: Últimas 6 observações
+tabela1 <- tail(setor_anual, n = 6)
+
+kable(tabela1,
+      digits = 2,
+      col.names = c("Data", "Setor", "Variação"),
+      align = 'c',
+      caption = 'Variação Anual por Setor tabela 1')
+
+```
+
+### Variação anual por setor tabela 2
+
+```{r}
+
+
+tabela2 <- setor_anual[(nrow(setor_anual) - 11):(nrow(setor_anual) - 6), ]
+
+kable(tabela2,
+      digits = 2,
+      col.names = c("Data", "Setor", "Variação"),
+      align = 'c',
+      caption = 'Variação Anual por Setor tabela 2')
+
+```
+:::
+:::
+:::
+
+## **Resultado Por Setor Pernambucano** {.smaller}
+
+::: columns
+::: {.column width="50%"}
+<br>
+
+- O resultado em comparação com mesmo mês do ano anterior, teve destaque os setores de Fabricação de máquinas, aparelhos e materiais elétricos e Fabricação de outros equipamentos de transporte, exceto veículos automotores
+
+- Observe todos os setores ao lado. 
+:::
+
+::: {.column width="50%"}
+::: panel-tabset
+### Variação interanual por setor tabela 1
+
+```{r, fig.width=8, fig.height=4}
+
+# Tabela 1: Últimas 6 observações
+tabela1 <- tail(setor_interanual, n = 6)
+
+kable(tabela1,
+      digits = 2,
+      col.names = c("Data", "Setor", "Variação"),
+      align = 'c',
+      caption = 'Variação interanual por Setor tabela 1')
+
+```
+
+### Variação interanual por setor tabela 2
+
+```{r}
+
+
+tabela2 <- setor_interanual[(nrow(setor_interanual) - 11):(nrow(setor_interanual) - 6), ]
+
+kable(tabela2,
+      digits = 2,
+      col.names = c("Data", "Setor", "Variação"),
+      align = 'c',
+      caption = 'Variação Interanual por Setor tabela 2')
+
+```
+:::
+:::
+:::
+
+## **Resultado Por Setor Pernambucano** {.smaller}
+
+::: columns
+::: {.column width="50%"}
+<br>
+
+- Já o resultado referente ao mês anterior, teve os mesmos setores de destaque da variação anual. 
+
+:::
+
+::: {.column width="50%"}
+::: panel-tabset
+### Variação na margem por setor tabela 1
+
+```{r, fig.width=8, fig.height=4}
+
+# Tabela 1: Últimas 6 observações
+tabela1 <- tail(setor_margem, n = 6)
+
+kable(tabela1,
+      digits = 2,
+      col.names = c("Data", "Setor", "Variação"),
+      align = 'c',
+      caption = 'Variação Margem por Setor tabela 1')
+
+```
+
+### Variação na margem por setor tabela 2
+
+```{r}
+
+
+tabela2 <- setor_margem[(nrow(setor_margem) - 11):(nrow(setor_margem) - 6), ]
+
+kable(tabela2,
+      digits = 2,
+      col.names = c("Data", "Setor", "Variação"),
+      align = 'c',
+      caption = 'Variação na margem por Setor tabela 2')
+
+```
+:::
+:::
+:::
