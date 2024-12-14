@@ -1,9 +1,9 @@
 ---
-title: "Pesquisa Industrial Mensal"
-author: 'Núcleo de Dados <br><span style = "font-size: 70%;">ADEPE<br><a href="https://github.com/dteconometrics">`r fontawesome::fa("github", fill = "#282f6b")`</a>&nbsp; <a href="https://www.linkedin.com/in/vinicius-limeira-565117180/">`r fontawesome::fa("linkedin", fill = "#282f6b")`</a>&nbsp; <a href="mailto:vinicius.valenca@adepe.pe.gov.br">`r fontawesome::fa("envelope", fill = "#282f6b")`</a>&nbsp; <a href="https://www.adepe.pe.gov.br/">`r fontawesome::fa("home", fill = "#282f6b")`</a></span>'
+title: "Análise de Churn de Clinetes"
+author: 'Vinicius Limeira <br><span style = "font-size: 70%;">ADEPE<br><a href="https://github.com/dteconometrics">`r fontawesome::fa("github", fill = "#282f6b")`</a>&nbsp; <a href="https://www.linkedin.com/in/vinicius-limeira-565117180/">`r fontawesome::fa("linkedin", fill = "#282f6b")`</a>&nbsp; <a href="mailto:vinicius.valenca75@gmail.com">`r fontawesome::fa("envelope", fill = "#282f6b")`</a>&nbsp; <a href="https://quarto.org/">`r fontawesome::fa("home", fill = "#282f6b")`</a></span>'
 format: 
   revealjs:
-    logo: "img/adepe_colorida.png"
+    logo: "img/logo.png"
     width: 1200
     slide-number: true
     theme: [solarized, personalizacoes.scss]
