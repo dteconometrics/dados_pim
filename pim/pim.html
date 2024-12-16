@@ -11,7 +11,7 @@
   <meta name="generator" content="quarto-1.3.450">
 
   <meta name="author" content="Vinicius Limeira   &nbsp; &nbsp; &nbsp; ">
-  <title>Previsão de Churn dos Clinetes</title>
+  <title>Previsão de Churn dos Clientes</title>
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
@@ -328,7 +328,7 @@
     <div class="slides">
 
 <section id="title-slide" data-background-size="cover" class="quarto-title-block center">
-  <h1 class="title">Previsão de Churn dos Clinetes</h1>
+  <h1 class="title">Previsão de Churn dos Clientes</h1>
 
 <div class="quarto-title-authors">
 <div class="quarto-title-author">
@@ -341,12 +341,12 @@ Vinicius Limeira <br><span style="font-size: 70%;"><br><a href="https://github.c
 </section>
 <section class="slide level2">
 
-<h3 class="smaller" id="sumário-executivo">Sumário Executivo</h3>
+<h3 class="smaller" id="sumário">Sumário</h3>
 <ul>
 <li>Sobre os Resultados<br><br>
 <ul>
-<li>Aqui Vem o Texto <br><br></li>
-<li>Aqui Vem o Texto <br><br></li>
+<li>O presente estudo analisou o comportamento de cancelamento (churn) de clientes e apresentou previsões e ações estratégicas para mitigar seu impacto. A taxa de churn atual é de 25%, com tendência de crescimento para 27,09% nos próximos 3 meses e 30,96% em 12 meses, se nenhuma ação for tomada. <br><br></li>
+<li>As ações propostas visam mitigar esse impacto, estabilizar a base de clientes e melhorar a sustentabilidade financeira da empresa.</li>
 </ul></li>
 </ul>
 </section>
@@ -356,9 +356,22 @@ Vinicius Limeira <br><span style="font-size: 70%;"><br><a href="https://github.c
 <div class="column" style="width:40%;">
 <p><br></p>
 <ul>
-<li><p>Aqui Vem o Texto</p></li>
-<li><p>Aqui Vem o Texto</p></li>
+<li><p>25% dos clientes cancelaram contratos. Embora a retenção ainda seja majoritária, a taxa de churn representa um risco significativo à receita.Além disso, maior quantidade de cancelamentos está concentrada em contratos curtos (1 ano).</p></li>
+<li><p>Pernambuco, Bahia e Amazonas têm as maiores taxas de cancelamento, mas também concentram a maior base de clientes, Cancelamentos estão concentrados em contratos curtos e em estados com maior base de clientes.</p></li>
 </ul>
+<div class="callout callout-note callout-titled callout-style-default">
+<div class="callout-body">
+<div class="callout-title">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<p><strong>Note</strong></p>
+</div>
+<div class="callout-content">
+<p><strong>Interaja clicando nas tabelas e gráficos, para visualizar os resultado</strong></p>
+</div>
+</div>
+</div>
 </div><div class="column" style="width:60%;">
 <div class="panel-tabset">
 <ul id="tabset-1" class="panel-tabset-tabby"><li><a data-tabby-default="" href="#tabset-1-1">Proporção de Churn</a></li><li><a href="#tabset-1-2">Distribuição</a></li><li><a href="#tabset-1-3">Cancelamento pro estado</a></li></ul>
@@ -401,7 +414,9 @@ Vinicius Limeira <br><span style="font-size: 70%;"><br><a href="https://github.c
 </section>
 <section id="cancelamento-nas-lojas" class="slide level2 smaller">
 <h2>Cancelamento nas Lojas</h2>
-<p>Aqui vem o Texto:</p>
+<ul>
+<li>O churn apresenta variações significativas tanto entre os segmentos quanto ao longo do tempo. O cancelamento está distribuído de forma desigual, com alguns segmentos contribuindo de maneira desproporcional para o churn total. Desde 2022, a taxa média é de cancelamentos é de 655.</li>
+</ul>
 <div class="columns">
 <div class="column" style="width:50%;">
 <p><strong>Cancelamento por loja</strong></p>
@@ -414,7 +429,9 @@ Vinicius Limeira <br><span style="font-size: 70%;"><br><a href="https://github.c
 </div>
 </div>
 </div>
-<p>Aqui vem o Texto</p>
+<ul>
+<li>Lojas como Easytech e Lifeflow tiveram uma grande porporção de taxa de cancelamento, 51% e 42%, recpectivamente</li>
+</ul>
 </div><div class="column" style="width:50%;">
 <div class="panel-tabset">
 <ul id="tabset-2" class="panel-tabset-tabby"><li><a data-tabby-default="" href="#tabset-2-1">Evolução da taxa</a></li><li><a href="#tabset-2-2">Propoção por cliente</a></li></ul>
@@ -452,8 +469,8 @@ Vinicius Limeira <br><span style="font-size: 70%;"><br><a href="https://github.c
 <div class="column" style="width:50%;">
 <p><br></p>
 <ul>
-<li><p>Aqui Vem o Texto</p></li>
-<li><p>Aqui Vem o Texto</p></li>
+<li><p>A Falta de Contato, foi o principal motivo de cancelament, responsável por 40%. Sendo o desinteresse pelo Serviço o segundo maior motivo, contribuindo com 34% dos cancelamentos.</p></li>
+<li><p>O Acre apresenta a maior taxa de cancelamento, com 100%, mas possui apenas 2 clientes, Pernambuco destaca-se com uma taxa significativa de cancelamento, representando 33% do total de contratos na região.</p></li>
 </ul>
 </div><div class="column" style="width:50%;">
 <div class="panel-tabset">
@@ -488,13 +505,15 @@ Vinicius Limeira <br><span style="font-size: 70%;"><br><a href="https://github.c
 </section>
 <section id="previsão-e-ações" class="slide level2 smaller">
 <h2>Previsão e Ações</h2>
-<p>Aqui vem o Texto:</p>
 <div class="columns">
 <div class="column" style="width:50%;">
-<p>Aqui vem o Texto</p>
+<ul>
+<li><p>A taxa de churn apresenta uma tendência crescente, com previsão de atingir 27,09% em 3 meses. Esse crescimento gradual reforça a urgência de implementar ações imediatas para mitigar o churn e reduzir impactos negativos na receita.</p></li>
+<li><p>Uma das ações recomendadas é implementar campanhas de contato proativo para solucionar a falta de comunicação, identificada como o principal motivo de cancelamento. Além disso, criar programas de fidelidade e oferecer descontos e benefícios para incentivar contratos de 2 ou 3 anos. Também é essencial treinar consultores em lojas críticas como Easytech e Lifeflow, fortalecendo o relacionamento com os clientes e aumentando a retenção.</p></li>
+</ul>
 </div><div class="column" style="width:50%;">
 <div class="panel-tabset">
-<ul id="tabset-4" class="panel-tabset-tabby"><li><a data-tabby-default="" href="#tabset-4-1">Previsão</a></li><li><a href="#tabset-4-2">Previsão</a></li></ul>
+<ul id="tabset-4" class="panel-tabset-tabby"><li><a data-tabby-default="" href="#tabset-4-1">Tabela</a></li><li><a href="#tabset-4-2">Gráfico de Previsão</a></li></ul>
 <div class="tab-content">
 <div id="tabset-4-1">
 <div class="cell" data-layout-align="center">
