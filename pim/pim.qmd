@@ -1,5 +1,5 @@
 ---
-title: "Previsão de Churn dos Clinetes"
+title: "Previsão de Churn dos Clientes"
 author: 'Vinicius Limeira <br><span style = "font-size: 70%;"><br><a href="https://github.com/dteconometrics">`r fontawesome::fa("github", fill = "#282f6b")`</a>&nbsp; <a href="https://www.linkedin.com/in/vinicius-limeira-565117180/">`r fontawesome::fa("linkedin", fill = "#282f6b")`</a>&nbsp; <a href="mailto:vinicius.valenca75@gmail.com">`r fontawesome::fa("envelope", fill = "#282f6b")`</a>&nbsp; <a href="https://quarto.org/">`r fontawesome::fa("home", fill = "#282f6b")`</a></span>'
 format: 
   revealjs:
@@ -66,11 +66,11 @@ acum_i <- function(data, n){
 ```
 
 
-### Sumário Executivo {.smaller}
+### Sumário {.smaller}
 
 -   Sobre os Resultados<br><br>
-    -   Aqui Vem o Texto <br><br>
-    -    Aqui Vem o Texto <br><br>
+    -   O presente estudo analisou o comportamento de cancelamento (churn) de clientes e apresentou previsões e          ações estratégicas para mitigar seu impacto. A taxa de churn atual é de 25\%, com tendência de                   crescimento para 27,09\% nos próximos 3 meses e 30,96\% em 12 meses, se nenhuma ação for tomada. <br><br>
+    - As ações propostas visam mitigar esse impacto, estabilizar a base de clientes e melhorar a sustentabilidade       financeira da empresa.
 
 ## **Problema de Cancelamento** {.smaller}
 
@@ -78,10 +78,19 @@ acum_i <- function(data, n){
 ::: {.column width="40%"}
 <br>
 
--   Aqui Vem o Texto
+- 25\% dos clientes cancelaram contratos. Embora a retenção ainda seja majoritária, a taxa de churn representa um risco significativo à receita.Além disso, maior quantidade de cancelamentos está concentrada em contratos curtos (1 ano).
 
--   Aqui Vem o Texto
+- Pernambuco, Bahia e Amazonas têm as maiores taxas de cancelamento, mas também concentram a maior base de clientes, Cancelamentos estão concentrados em contratos curtos e em estados com maior base de clientes.
+
+::: {.callout-note}
+ 
+**Interaja clicando nas tabelas e gráficos, para visualizar os resultado**
+
 :::
+
+:::
+
+
 
 :::: {.column width="60%"}
 ::: panel-tabset
@@ -119,7 +128,7 @@ knitr::include_graphics("cancelamento_estado.png")
 
 ## Cancelamento nas Lojas {.smaller}
 
-Aqui vem o Texto:
+- O churn apresenta variações significativas tanto entre os segmentos quanto ao longo do tempo. O cancelamento está distribuído de forma desigual, com alguns segmentos contribuindo de maneira desproporcional para o churn total. Desde 2022, a taxa média é de cancelamentos é de 655. 
 
 :::::: columns
 ::: {.column width="50%"}
@@ -131,7 +140,7 @@ Aqui vem o Texto:
 knitr::include_graphics("cancelamento_por_loja.png")
 ```
 
-Aqui vem o Texto
+- Lojas como Easytech e Lifeflow tiveram uma grande porporção de taxa de cancelamento, 51\% e 42\%, recpectivamente 
 :::
 
 :::: {.column width="50%"}
@@ -162,9 +171,10 @@ knitr::include_graphics("proporcao.png")
 ::: {.column width="50%"}
 <br>
 
--   Aqui Vem o Texto
+- A Falta de Contato, foi o principal motivo de cancelament, responsável por 40\%. Sendo 
+o desinteresse pelo Serviço o segundo maior motivo, contribuindo com 34\% dos cancelamentos.
 
--   Aqui Vem o Texto
+- O Acre apresenta a maior taxa de cancelamento, com 100\%, mas possui apenas 2 clientes, Pernambuco destaca-se com uma taxa significativa de cancelamento, representando 33\% do total de contratos na região.
 :::
 
 :::: {.column width="50%"}
@@ -193,18 +203,22 @@ knitr::include_graphics("taxa_por_estado.png")
 
 ## Previsão e Ações {.smaller}
 
-Aqui vem o Texto:
 
 :::::: columns
 ::: {.column width="50%"}
 
-Aqui vem o Texto
+- A taxa de churn apresenta uma tendência crescente, com previsão de atingir 27,09% em 3 meses. Esse crescimento gradual reforça a urgência de implementar ações imediatas para mitigar o churn e reduzir impactos negativos na receita.
+
+- Uma das ações recomendadas é implementar campanhas de contato proativo para solucionar a falta de comunicação, identificada como o principal motivo de cancelamento. Além disso, criar programas de fidelidade e oferecer descontos e benefícios para incentivar contratos de 2 ou 3 anos. Também é essencial treinar consultores em lojas críticas como Easytech e Lifeflow, fortalecendo o relacionamento com os clientes e aumentando a retenção.
+
+
 :::
 
 :::: {.column width="50%"}
 ::: panel-tabset
 
-## Previsão 
+## Tabela
+
 ```{r, echo=F, eval=T, results='markup', fig.width=8, fig.height=4, fig.align='center', out.width="1\\linewidth", warning=FALSE, message=FALSE, size='tiny'}
 # Dados das previsões
 previsoes <- data.frame(
@@ -226,7 +240,8 @@ previsoes %>%
 ```
 
 
-## Previsão 
+## Gráfico de Previsão
+
 ```{r, echo=F, eval=T, results='markup', fig.width=8, fig.height=4, fig.align='center', out.width="1\\linewidth", warning=FALSE, message=FALSE, size='tiny'}
 
 knitr::include_graphics("previsao.png")
@@ -238,3 +253,4 @@ knitr::include_graphics("previsao.png")
 :::
 ::::
 ::::::
+
